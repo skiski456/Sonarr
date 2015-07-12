@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Nancy;
 using NzbDrone.Common.Extensions;
 using NzbDrone.Core.Tv;
@@ -33,6 +33,11 @@ namespace Sonarr.Api.V3.Series
                 if (resource.QualityProfileId.HasValue)
                 {
                     series.ProfileId = resource.QualityProfileId.Value;
+                }
+
+                if (resource.LanguageProfileId.HasValue)
+                {
+                    series.LanguageProfileId = resource.LanguageProfileId.Value;
                 }
 
                 if (resource.SeriesType.HasValue)
