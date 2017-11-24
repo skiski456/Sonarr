@@ -123,8 +123,10 @@ namespace NzbDrone.Mono.Disk
                     newFile.CreateSymbolicLinkTo(fullPath);
                 }
             }
-
-            base.CopyFileInternal(source, destination, overwrite);
+            else
+            {
+                base.CopyFileInternal(source, destination, overwrite);
+            }
         }
 
         protected override void MoveFileInternal(string source, string destination)
@@ -161,8 +163,10 @@ namespace NzbDrone.Mono.Disk
                     throw;
                 }
             }
-
-            base.MoveFileInternal(source, destination);
+            else
+            {
+                base.MoveFileInternal(source, destination);
+            }
         }
 
         public override bool TryCreateHardLink(string source, string destination)
