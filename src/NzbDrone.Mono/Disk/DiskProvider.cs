@@ -96,6 +96,75 @@ namespace NzbDrone.Mono.Disk
             return mount?.TotalSize;
         }
 
+        protected override void CopyFileInternal(string source, string destination, bool overwrite)
+        {
+            var sourceInfo = UnixFileSystemInfo.GetFileSystemEntry(source);
+
+            if (sourceInfo.IsSymbolicLink)
+            {
+                var isSameDir = UnixPath.GetDirectoryName(source) == UnixPath.GetDirectoryName(destination);
+                var symlinkInfo = (UnixSymbolicLinkInfo)sourceInfo;
+                var symlinkPath = symlinkInfo.ContentsPath;
+
+                var newFile = new UnixSymbolicLinkInfo(destination);
+
+                if (FileExists(destination) && overwrite)
+                {
+                    DeleteFile(destination);
+                }
+
+                if (isSameDir)
+                { // We're in the same dir, so we can preserve relative symlinks.
+                    newFile.CreateSymbolicLinkTo(symlinkInfo.ContentsPath);
+                }
+                else
+                {
+                    var fullPath = UnixPath.Combine(UnixPath.GetDirectoryName(source), symlinkPath);
+                    newFile.CreateSymbolicLinkTo(fullPath);
+                }
+            }
+
+            base.CopyFileInternal(source, destination, overwrite);
+        }
+
+        protected override void MoveFileInternal(string source, string destination)
+        {
+            var sourceInfo = UnixFileSystemInfo.GetFileSystemEntry(source);
+
+            if (sourceInfo.IsSymbolicLink)
+            {
+                var isSameDir = UnixPath.GetDirectoryName(source) == UnixPath.GetDirectoryName(destination);
+                var symlinkInfo = (UnixSymbolicLinkInfo)sourceInfo;
+                var symlinkPath = symlinkInfo.ContentsPath;
+
+                var newFile = new UnixSymbolicLinkInfo(destination);
+
+                if (isSameDir)
+                { // We're in the same dir, so we can preserve relative symlinks.
+                    newFile.CreateSymbolicLinkTo(symlinkInfo.ContentsPath);
+                }
+                else
+                {
+                    var fullPath = UnixPath.Combine(UnixPath.GetDirectoryName(source), symlinkPath);
+                    newFile.CreateSymbolicLinkTo(fullPath);
+                }
+
+                try
+                {
+                    // Finally remove the original symlink.
+                    symlinkInfo.Delete();
+                }
+                catch
+                {
+                    // Removing symlink failed, so rollback the new link and throw.
+                    newFile.Delete();
+                    throw;
+                }
+            }
+
+            base.MoveFileInternal(source, destination);
+        }
+
         public override bool TryCreateHardLink(string source, string destination)
         {
             try
