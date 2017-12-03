@@ -48,6 +48,7 @@ namespace NzbDrone.Core.MediaFiles.MediaInfo
             }
 
             return audioChannelPositions.Replace("Object Based / ", "")
+                                            .Replace(" objects", "")
                                             .Split(new string[] { " / " }, StringSplitOptions.RemoveEmptyEntries)
                                             .First()
                                             .Split('/')
